@@ -1,18 +1,25 @@
 package auth_service.services;
 
+import auth_service.dtos.PaginatedResponse;
 import auth_service.dtos.ProductRequestDTO;
 import auth_service.dtos.ProductResponseDTO;
 import auth_service.entities.Product;
+import auth_service.enums.StatusProduct;
 import auth_service.repositories.CategoryRepository;
 import auth_service.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -65,6 +72,48 @@ public class ProductService {
                 product.getStatus(),
                 product.getCategory().getName()
         );
+    }
+
+    public List<ProductResponseDTO> getProductsByCategory(String categoryName) {
+        return productRepository.findAll()
+                .stream()
+                .filter(p -> p.getCategory().getName().equals(categoryName))
+                .map(p -> new ProductResponseDTO(
+                        p.getId(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getStatus(),
+                        p.getCategory().getName()
+                        ))
+                .collect(Collectors.toList());
+    }
+
+    public PaginatedResponse<ProductResponseDTO> getPaginationProducts(int page, int size) {
+
+                Page<Product> pagedResult = productRepository.findAll(PageRequest.of(page, size, Sort.by("name").descending()));
+
+                List<ProductResponseDTO> products = pagedResult.getContent()
+                .stream()
+                .map(p -> new ProductResponseDTO(
+                        p.getId(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getStatus(),
+                        p.getCategory().getName()
+                )).collect(Collectors.toList());
+
+
+
+        return new PaginatedResponse<> (
+                products,
+                pagedResult.getNumber(),
+                pagedResult.getSize(),
+                pagedResult.getTotalElements(),
+                pagedResult.getTotalPages()
+        );
+
     }
 
     public ResponseEntity<Void> deleteProduct(Long id){

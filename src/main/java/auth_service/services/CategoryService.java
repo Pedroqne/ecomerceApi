@@ -1,5 +1,6 @@
 package auth_service.services;
 
+import auth_service.dtos.PaginatedResponse;
 import auth_service.entities.Category;
 import auth_service.entities.Product;
 import auth_service.repositories.CategoryRepository;
